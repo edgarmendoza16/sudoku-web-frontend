@@ -1,0 +1,17 @@
+.cell {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-style: solid;
+  border-color: #b8b8b8;
+  background-color: white;
+  color: #161616;
+  transition: background-color 0.2s ease;
+  font-family: sans-serif;
+  font-size: 2.5rem;
+}
+
+.cell:hover {
+  background-color: #cdebfd;
+}
