@@ -1,24 +1,40 @@
 import {$, component$, useOnDocument, useStore} from "@builder.io/qwik";
-import {Cell} from "./cell";
+import {Cell as Coordinate} from "./cell";
 import styles from "./sudoku.module.css";
 import {Sudoku} from "~/libs/sudoku";
 
 interface SudokuProps {
-  rows: number[][]
+  level: string
   cellSize: number
   blockBorderWidth: number
   cellBorderWidth: number
 }
 
-interface Cell {
+interface Coordinate {
   row: number
   column: number
 }
 
+interface SudokuStore {
+  correct: number[][], initial: number[][], cells: number[][]
+}
+
+function generateSudokuStore(level: string): SudokuStore {
+  const correctCells = Sudoku.generate()
+  const initialCells = Sudoku.removeNumbers(correctCells, level)
+  const cells = initialCells.map((row)=>row.map((column) => column))
+
+  return {
+    correct: correctCells,
+    initial: initialCells,
+    cells,
+  }
+}
+
 export const SudokuLayout = component$<SudokuProps>((props) => {
-  const board = useStore<number[][]>(props.rows)
-  const duplicates = useStore<{cells: Cell[]}>({cells: []})
-  const selectedCell = useStore<Cell>({
+  const sudokuStore = useStore<SudokuStore>(generateSudokuStore(props.level))
+  const duplicates = useStore<{cells: Coordinate[]}>({cells: []})
+  const selectedCell = useStore<Coordinate>({
     row: -1,
     column: -1,
   });
@@ -27,11 +43,15 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
     if (selectedCell.row >= 0) {
       const key = parseInt(event.key)
       if (!isNaN(key)) {
-        if (Sudoku.isValidNumber(board, selectedCell.row, selectedCell.column, key)) {
-          board[selectedCell.row][selectedCell.column] = key
+        if (sudokuStore.initial[selectedCell.row][selectedCell.column] !== 0) {
+          return
+        }
+
+        if (Sudoku.isValidNumber(sudokuStore.cells, selectedCell.row, selectedCell.column, key)) {
+          sudokuStore.cells[selectedCell.row][selectedCell.column] = key
           duplicates.cells = []
         } else {
-          duplicates.cells = Sudoku.getDuplicateNumberCoordinates(board, selectedCell.row, selectedCell.column, key)
+          duplicates.cells = Sudoku.getDuplicateNumberCoordinates(sudokuStore.cells, selectedCell.row, selectedCell.column, key)
         }
       }
     }
@@ -49,7 +69,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
       class={styles.sudoku}
       style={{width: size, height: size}}
     >
-      {board.map((row, y) => {
+      {sudokuStore.cells.map((row, y) => {
         return row.map((value, x) => {
           let isSelected = false
           let highlightNumber = false
@@ -57,8 +77,8 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
           let highlightError = false
 
           if (selectedCell.row >= 0) {
-            const selectedValue = board[selectedCell.row][selectedCell.column]
-            const currentValue = board[y][x]
+            const selectedValue = sudokuStore.cells[selectedCell.row][selectedCell.column]
+            const currentValue = sudokuStore.cells[y][x]
             if (selectedValue === currentValue) {
               highlightNumber = true
             }
@@ -82,7 +102,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             }
           }
 
-          return <Cell
+          return <Coordinate
             key={`y-${y}-x-${x}`}
             x={x}
             y={y}
@@ -93,6 +113,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             borderRightWidth={rightBorderIndexes.includes(x) ? props.blockBorderWidth : props.cellBorderWidth}
             borderBottomWidth={bottomBorderIndexes.includes(y) ? props.blockBorderWidth : props.cellBorderWidth}
             onSelect$={(props) => {
+              duplicates.cells = []
               selectedCell.row = props.y
               selectedCell.column = props.x
             }}

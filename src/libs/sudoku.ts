@@ -1,11 +1,5 @@
 export class Sudoku {
-  public static make(nivel: string) {
-    const sudoku = Sudoku.generate();
-    Sudoku.removeNumbers(sudoku, nivel);
-    return sudoku;
-  }
-
-  private static generate() {
+  public static generate() {
     const sudoku = Array.from({length: 9}, () => Array.from({length: 9}, () => 0));
     this.isSolvable(sudoku);
     return sudoku;
@@ -99,7 +93,9 @@ export class Sudoku {
     return [-1, -1];
   }
 
-  private static removeNumbers(sudoku: number[][], level: string) {
+  public static removeNumbers(sudoku: number[][], level: string): number[][] {
+    const cells = sudoku.map((row) => row.map((column) => column))
+
     const numToRemove = {
       'facil': 40,
       'medio': 45,
@@ -110,7 +106,7 @@ export class Sudoku {
     }[level.toLowerCase()];
 
     if (!numToRemove) {
-      return;
+      return cells
     }
 
     let cellsToRemove = [];
@@ -124,8 +120,10 @@ export class Sudoku {
 
     for (let i = 0; i < numToRemove; i++) {
       const cell = cellsToRemove[i];
-      sudoku[cell[0]][cell[1]] = 0;
+      cells[cell[0]][cell[1]] = 0
     }
+
+    return cells
   }
 
   private static shuffle(array: number[][]) {

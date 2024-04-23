@@ -1,15 +1,12 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import {SudokuLayout} from "~/components/sudoku/sudoku";
-import {Sudoku} from "~/libs/sudoku";
 
 export default component$(() => {
-  const rows = Sudoku.make("facil")
-
   return (
     <div style={{minHeight: "100vh", backgroundColor: "#eee"}}>
       <h1>Sudoku online 👋</h1>
-      <SudokuLayout rows={rows} cellSize={80} blockBorderWidth={2} cellBorderWidth={0.5}/>
+      <SudokuLayout level="facil" cellSize={80} blockBorderWidth={2} cellBorderWidth={0.5}/>
     </div>
   );
 });
