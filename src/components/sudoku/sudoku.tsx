@@ -41,8 +41,18 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
     column: -1,
   });
 
-  useOnDocument("keypress", $((event) => {
+  useOnDocument("keydown", $((event) => {
     if (selectedCell.row >= 0) {
+      if (event.key === 'Backspace') {
+        if (sudokuStore.initial[selectedCell.row][selectedCell.column] === 0) {
+          sudokuStore.cells[selectedCell.row][selectedCell.column] = 0
+          wrongCells.cells = wrongCells.cells.filter((coordinate) => {
+            return !(selectedCell.row === coordinate.row && selectedCell.column === coordinate.column)
+          })
+        }
+        return
+      }
+
       const key = parseInt(event.key)
       if (!isNaN(key)) {
         if (sudokuStore.initial[selectedCell.row][selectedCell.column] !== 0) {
@@ -55,7 +65,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
               wrongCells.cells.push({row: selectedCell.row, column: selectedCell.column})
             } else {
               wrongCells.cells = wrongCells.cells.filter((coordinate) => {
-                return selectedCell.row !== coordinate.row && selectedCell.column !== coordinate.column
+                return !(selectedCell.row === coordinate.row && selectedCell.column === coordinate.column)
               })
             }
           }
