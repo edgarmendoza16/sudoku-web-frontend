@@ -97,7 +97,7 @@ export class Sudoku {
     const cells = sudoku.map((row) => row.map((column) => column))
 
     const numToRemove = {
-      'facil': 40,
+      'facil': 1,
       'medio': 45,
       'dificil': 50,
       'experto': 55,

@@ -1,7 +1,8 @@
-import {$, component$, useOnDocument, useStore} from "@builder.io/qwik";
+import {$, component$, useOnDocument, useSignal, useStore} from "@builder.io/qwik";
 import {Cell as Coordinate} from "./cell";
 import styles from "./sudoku.module.css";
 import {Sudoku} from "~/libs/sudoku";
+import {argv0} from "process";
 
 interface SudokuProps {
   level: string
@@ -17,22 +18,42 @@ interface Coordinate {
 }
 
 interface SudokuStore {
-  correct: number[][], initial: number[][], cells: number[][]
+  correct: number[][]
+  initial: number[][]
+  cells: number[][]
+  missingCellsCount: number
 }
 
 function generateSudokuStore(level: string): SudokuStore {
   const correctCells = Sudoku.generate()
   const initialCells = Sudoku.removeNumbers(correctCells, level)
-  const cells = initialCells.map((row)=>row.map((column) => column))
+  const cells = initialCells.map((row) => row.map((column) => column))
+
+  let missingCellsCount = 0
+  for (const row of initialCells) {
+    for (const col of row) {
+      if (col === 0) {
+        missingCellsCount++
+      }
+    }
+  }
 
   return {
     correct: correctCells,
     initial: initialCells,
     cells,
+    missingCellsCount,
   }
 }
 
+enum GameStatus {
+  PLAYING = 0,
+  WON = 1,
+  LOST = 2,
+}
+
 export const SudokuLayout = component$<SudokuProps>((props) => {
+  const gameStatus = useSignal<GameStatus>(GameStatus.PLAYING)
   const sudokuStore = useStore<SudokuStore>(generateSudokuStore(props.level))
   const duplicates = useStore<{cells: Coordinate[]}>({cells: []})
   const wrongCells = useStore<{cells: Coordinate[]}>({cells: []})
@@ -46,6 +67,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
       if (event.key === 'Backspace') {
         if (sudokuStore.initial[selectedCell.row][selectedCell.column] === 0) {
           sudokuStore.cells[selectedCell.row][selectedCell.column] = 0
+          sudokuStore.missingCellsCount++
           wrongCells.cells = wrongCells.cells.filter((coordinate) => {
             return !(selectedCell.row === coordinate.row && selectedCell.column === coordinate.column)
           })
@@ -70,6 +92,9 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             }
           }
 
+          if (sudokuStore.cells[selectedCell.row][selectedCell.column] === 0) {
+            sudokuStore.missingCellsCount--
+          }
           sudokuStore.cells[selectedCell.row][selectedCell.column] = key
           duplicates.cells = []
         } else {
@@ -78,6 +103,20 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
       }
     }
   }))
+
+  if (sudokuStore.missingCellsCount === 0) {
+    if (duplicates.cells.length > 0 || wrongCells.cells.length > 0) {
+      gameStatus.value = GameStatus.LOST
+    } else {
+      gameStatus.value = GameStatus.WON
+    }
+  }
+
+  if (gameStatus.value === GameStatus.WON) {
+    alert("You won!")
+  } else if (gameStatus.value === GameStatus.LOST) {
+    alert("You lost!")
+  }
 
   const size = (props.cellSize * 9) + (props.blockBorderWidth * 3 - 10) + (props.cellBorderWidth * 9);
 
