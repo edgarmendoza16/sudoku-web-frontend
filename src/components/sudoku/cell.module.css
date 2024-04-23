@@ -13,5 +13,21 @@
 }
 
 .cell:hover {
-  background-color: #cdebfd;
+  background-color: #ececec;
+}
+
+.cell.selected {
+  background-color: #d3d3d3;
+}
+
+.cell.highlight-background {
+  background-color: #ececec;
+}
+
+.cell.highlight-number {
+  color: #0071ff;
+}
+
+.cell.highlight-error {
+  color: red;
 }

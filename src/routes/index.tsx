@@ -1,11 +1,10 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import {Sudoku as SudokuLayout} from "~/components/sudoku/sudoku";
+import {SudokuLayout} from "~/components/sudoku/sudoku";
 import {Sudoku} from "~/libs/sudoku";
 
 export default component$(() => {
-  const sudoku = new Sudoku();
-  const rows = sudoku.make("facil")
+  const rows = Sudoku.make("facil")
 
   return (
     <div style={{minHeight: "100vh", backgroundColor: "#eee"}}>

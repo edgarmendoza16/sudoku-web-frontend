@@ -3,7 +3,6 @@ import {component$} from "@builder.io/qwik";
 import styles from "./cell.module.css";
 
 interface CellInfo {
-  value: number
   x: number
   y: number
 }
@@ -17,21 +16,43 @@ interface CellProps {
   size: number
   x: number
   y: number
+  highlightBackground: boolean
+  highlightNumber: boolean
+  isSelected: boolean
+  highlightAsError: boolean
   onSelect$: QRL<(info: CellInfo) => void>
 }
 
 export const Cell = component$<CellProps>((props) => {
+  const classList = [styles.cell]
+
+  if (props.highlightBackground) {
+    classList.push(styles["highlight-background"])
+  }
+
+  if (props.highlightNumber) {
+    classList.push(styles["highlight-number"])
+  }
+
+  if (props.isSelected) {
+    classList.push(styles["selected"])
+  }
+
+  if (props.highlightAsError) {
+    classList.push(styles["highlight-error"])
+  }
+
   return (
     <div
-      class={styles.cell}
-      onClick$={() => props.onSelect$({value: props.value, x: props.x, y: props.y})}
+      class={classList}
+      onClick$={() => props.onSelect$({x: props.x, y: props.y})}
       style={{
         width: props.size,
         height: props.size,
         borderTopWidth: props.borderTopWidth,
         borderLeftWidth: props.borderLeftWidth,
         borderRightWidth: props.borderRightWidth,
-        borderBottomWidth: props.borderBottomWidth
+        borderBottomWidth: props.borderBottomWidth,
       }}>
       <span>{props.value === 0 ? "" : props.value}</span>
     </div>
