@@ -5,6 +5,7 @@ import {Sudoku} from "~/libs/sudoku";
 
 interface SudokuProps {
   level: string
+  checkErrors: boolean
   cellSize: number
   blockBorderWidth: number
   cellBorderWidth: number
@@ -34,6 +35,7 @@ function generateSudokuStore(level: string): SudokuStore {
 export const SudokuLayout = component$<SudokuProps>((props) => {
   const sudokuStore = useStore<SudokuStore>(generateSudokuStore(props.level))
   const duplicates = useStore<{cells: Coordinate[]}>({cells: []})
+  const wrongCells = useStore<{cells: Coordinate[]}>({cells: []})
   const selectedCell = useStore<Coordinate>({
     row: -1,
     column: -1,
@@ -48,6 +50,16 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
         }
 
         if (Sudoku.isValidNumber(sudokuStore.cells, selectedCell.row, selectedCell.column, key)) {
+          if (props.checkErrors) {
+            if (sudokuStore.correct[selectedCell.row][selectedCell.column] !== key) {
+              wrongCells.cells.push({row: selectedCell.row, column: selectedCell.column})
+            } else {
+              wrongCells.cells = wrongCells.cells.filter((coordinate) => {
+                return selectedCell.row !== coordinate.row && selectedCell.column !== coordinate.column
+              })
+            }
+          }
+
           sudokuStore.cells[selectedCell.row][selectedCell.column] = key
           duplicates.cells = []
         } else {
@@ -75,6 +87,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
           let highlightNumber = false
           let highlightBackground = false
           let highlightError = false
+          let highlightWrongCellError = false
 
           if (selectedCell.row >= 0) {
             const selectedValue = sudokuStore.cells[selectedCell.row][selectedCell.column]
@@ -102,6 +115,14 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             }
           }
 
+          if (wrongCells.cells.length > 0) {
+            for (const cell of wrongCells.cells) {
+              if (cell.row === y && cell.column === x) {
+                highlightWrongCellError = true
+              }
+            }
+          }
+
           return <Coordinate
             key={`y-${y}-x-${x}`}
             x={x}
@@ -120,6 +141,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             highlightBackground={highlightBackground}
             highlightNumber={highlightNumber}
             highlightAsError={highlightError}
+            highlightAsWrongCellError={highlightWrongCellError}
             isSelected={isSelected}
           />
         })

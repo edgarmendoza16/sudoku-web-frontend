@@ -6,7 +6,7 @@ export default component$(() => {
   return (
     <div style={{minHeight: "100vh", backgroundColor: "#eee"}}>
       <h1>Sudoku online 👋</h1>
-      <SudokuLayout level="facil" cellSize={80} blockBorderWidth={2} cellBorderWidth={0.5}/>
+      <SudokuLayout level="facil" checkErrors={true} cellSize={80} blockBorderWidth={2} cellBorderWidth={0.5}/>
     </div>
   );
 });

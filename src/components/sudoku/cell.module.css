@@ -31,3 +31,8 @@
 .cell.highlight-error {
   color: red;
 }
+
+.cell.highlight-wrong-cell-error {
+  color: red;
+  background-color: orange;
+}
