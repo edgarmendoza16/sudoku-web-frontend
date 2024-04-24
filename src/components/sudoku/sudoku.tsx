@@ -1,8 +1,7 @@
 import {$, component$, useOnDocument, useSignal, useStore} from "@builder.io/qwik";
-import {Cell as Coordinate} from "./cell";
+import {Cell} from "./cell";
 import styles from "./sudoku.module.css";
 import {Sudoku} from "~/libs/sudoku";
-import {argv0} from "process";
 
 interface SudokuProps {
   level: string
@@ -128,7 +127,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
     }, 100)
   }
 
-  const size = (props.cellSize * 9) + (props.blockBorderWidth * 3 - 10) + (props.cellBorderWidth * 9);
+  const size = props.cellSize * 9
 
   const topBorderIndexes = [0, 3, 6];
   const leftBorderIndexes = [0, 3, 6];
@@ -186,7 +185,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
               }
             }
 
-            return <Coordinate
+            return <Cell
               key={`y-${y}-x-${x}`}
               x={x}
               y={y}
