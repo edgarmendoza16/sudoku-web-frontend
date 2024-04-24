@@ -4,8 +4,6 @@ import styles from "./sudoku.module.css";
 import {Sudoku} from "~/libs/sudoku";
 
 interface SudokuProps {
-  level: string
-  checkErrors: boolean
   cellSize: number
   blockBorderWidth: number
   cellBorderWidth: number
@@ -52,10 +50,21 @@ enum GameStatus {
 }
 
 export const SudokuLayout = component$<SudokuProps>((props) => {
+  const checkErrors = useSignal<boolean>(true)
+  const level = useSignal("facil")
+
+  const levels = [
+    'facil',
+    'medio',
+    'dificil',
+    'experto',
+    'maestro',
+    'extremo',
+  ]
   const maxErrors = 3
   const gameStatus = useSignal<GameStatus>(GameStatus.PLAYING)
   const errorsCount = useSignal<number>(0)
-  const sudokuStore = useStore<SudokuStore>(generateSudokuStore(props.level))
+  const sudokuStore = useStore<SudokuStore>(generateSudokuStore(level.value))
   const duplicates = useStore<{cells: Coordinate[]}>({cells: []})
   const wrongCells = useStore<{cells: Coordinate[]}>({cells: []})
   const selectedCell = useStore<Coordinate>({
@@ -113,7 +122,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
         }
 
         if (Sudoku.isValidNumber(sudokuStore.cells, selectedCell.row, selectedCell.column, key)) {
-          if (props.checkErrors) {
+          if (checkErrors.value) {
             if (sudokuStore.correct[selectedCell.row][selectedCell.column] !== key) {
               wrongCells.cells.push({row: selectedCell.row, column: selectedCell.column})
               errorsCount.value++
@@ -162,6 +171,24 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
 
   return (
     <>
+      <select value={level.value} onChange$={(event: any) =>{
+        level.value = event.target.value
+        errorsCount.value = 0
+        gameStatus.value = GameStatus.PLAYING
+        duplicates.cells = []
+        wrongCells.cells = []
+        selectedCell.row = -1
+        selectedCell.column = -1
+        const newSudoku = generateSudokuStore(level.value)
+        sudokuStore.cells = newSudoku.cells
+        sudokuStore.missingCellsCount = newSudoku.missingCellsCount
+        sudokuStore.correct = newSudoku.correct
+        sudokuStore.initial = newSudoku.initial
+      }}>
+        {levels.map((option) => {
+          return <option value={option} key={option}>{option}</option>
+        })}
+      </select>
       <div>
         <p>Errores: {errorsCount} / {maxErrors}</p>
       </div>
