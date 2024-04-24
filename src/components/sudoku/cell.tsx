@@ -21,11 +21,16 @@ interface CellProps {
   isSelected: boolean
   highlightAsError: boolean
   highlightAsWrongCellError: boolean
+  isInitial: boolean
   onSelect$: QRL<(info: CellInfo) => void>
 }
 
 export const Cell = component$<CellProps>((props) => {
   const classList = [styles.cell]
+
+  if (props.isInitial) {
+    classList.push(styles["initial"])
+  }
 
   if (props.highlightBackground) {
     classList.push(styles["highlight-background"])

@@ -171,7 +171,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
 
   return (
     <>
-      <select value={level.value} onChange$={(event: any) =>{
+      <select value={level.value} onChange$={(event: any) => {
         level.value = event.target.value
         errorsCount.value = 0
         gameStatus.value = GameStatus.PLAYING
@@ -203,6 +203,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             let highlightBackground = false
             let highlightError = false
             let highlightWrongCellError = false
+            let isInitialNumber = false
 
             if (selectedCell.row >= 0) {
               const selectedValue = sudokuStore.cells[selectedCell.row][selectedCell.column]
@@ -222,18 +223,22 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
               isSelected = selectedCell.row === y && selectedCell.column === x
             }
 
-            if (duplicates.cells.length > 0) {
-              for (const cell of duplicates.cells) {
-                if (cell.row === y && cell.column === x) {
-                  highlightError = true
+            if (sudokuStore.initial[y][x] !== 0) {
+              isInitialNumber = true
+            } else {
+              if (duplicates.cells.length > 0) {
+                for (const cell of duplicates.cells) {
+                  if (cell.row === y && cell.column === x) {
+                    highlightError = true
+                  }
                 }
               }
-            }
 
-            if (wrongCells.cells.length > 0) {
-              for (const cell of wrongCells.cells) {
-                if (cell.row === y && cell.column === x) {
-                  highlightWrongCellError = true
+              if (wrongCells.cells.length > 0) {
+                for (const cell of wrongCells.cells) {
+                  if (cell.row === y && cell.column === x) {
+                    highlightWrongCellError = true
+                  }
                 }
               }
             }
@@ -261,6 +266,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
               highlightNumber={highlightNumber}
               highlightAsError={highlightError}
               highlightAsWrongCellError={highlightWrongCellError}
+              isInitial={isInitialNumber}
               isSelected={isSelected}
             />
           })

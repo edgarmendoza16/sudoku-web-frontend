@@ -12,6 +12,10 @@
   font-size: 2.5rem;
 }
 
+.cell.initial {
+  color: #575757;
+}
+
 .cell:hover {
   background-color: #ececec;
 }
