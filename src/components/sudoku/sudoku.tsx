@@ -69,6 +69,32 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
     }
 
     if (selectedCell.row >= 0) {
+      if (event.key === "ArrowDown") {
+        if (selectedCell.row < 8) {
+          selectedCell.row += 1
+        } else {
+          selectedCell.row = 0
+        }
+      } else if (event.key === "ArrowUp") {
+        if (selectedCell.row > 0) {
+          selectedCell.row -= 1
+        } else {
+          selectedCell.row = 8
+        }
+      } else if (event.key === "ArrowLeft") {
+        if (selectedCell.column > 0) {
+          selectedCell.column -= 1
+        } else {
+          selectedCell.column = 8
+        }
+      } else if (event.key === "ArrowRight") {
+        if (selectedCell.column < 8) {
+          selectedCell.column += 1
+        } else {
+          selectedCell.column = 0
+        }
+      }
+
       if (event.key === 'Backspace') {
         if (sudokuStore.initial[selectedCell.row][selectedCell.column] === 0) {
           sudokuStore.cells[selectedCell.row][selectedCell.column] = 0
