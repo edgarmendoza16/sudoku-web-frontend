@@ -53,7 +53,9 @@ enum GameStatus {
 }
 
 export const SudokuLayout = component$<SudokuProps>((props) => {
+  const maxErrors = 3
   const gameStatus = useSignal<GameStatus>(GameStatus.PLAYING)
+  const errorsCount = useSignal<number>(0)
   const sudokuStore = useStore<SudokuStore>(generateSudokuStore(props.level))
   const duplicates = useStore<{cells: Coordinate[]}>({cells: []})
   const wrongCells = useStore<{cells: Coordinate[]}>({cells: []})
@@ -63,6 +65,10 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
   });
 
   useOnDocument("keydown", $((event) => {
+    if (gameStatus.value !== GameStatus.PLAYING) {
+      return
+    }
+
     if (selectedCell.row >= 0) {
       if (event.key === 'Backspace') {
         if (sudokuStore.initial[selectedCell.row][selectedCell.column] === 0) {
@@ -85,6 +91,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
           if (props.checkErrors) {
             if (sudokuStore.correct[selectedCell.row][selectedCell.column] !== key) {
               wrongCells.cells.push({row: selectedCell.row, column: selectedCell.column})
+              errorsCount.value++
             } else {
               wrongCells.cells = wrongCells.cells.filter((coordinate) => {
                 return !(selectedCell.row === coordinate.row && selectedCell.column === coordinate.column)
@@ -99,23 +106,26 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
           duplicates.cells = []
         } else {
           duplicates.cells = Sudoku.getDuplicateNumberCoordinates(sudokuStore.cells, selectedCell.row, selectedCell.column, key)
+          errorsCount.value++
         }
       }
     }
   }))
 
-  if (sudokuStore.missingCellsCount === 0) {
-    if (duplicates.cells.length > 0 || wrongCells.cells.length > 0) {
-      gameStatus.value = GameStatus.LOST
-    } else {
-      gameStatus.value = GameStatus.WON
-    }
+  if (errorsCount.value === maxErrors) {
+    gameStatus.value = GameStatus.LOST
+  } else if (sudokuStore.missingCellsCount === 0) {
+    gameStatus.value = GameStatus.WON
   }
 
   if (gameStatus.value === GameStatus.WON) {
-    alert("You won!")
+    setTimeout(() => {
+      alert("You won!")
+    }, 100)
   } else if (gameStatus.value === GameStatus.LOST) {
-    alert("You lost!")
+    setTimeout(() => {
+      alert("You lost!")
+    }, 100)
   }
 
   const size = (props.cellSize * 9) + (props.blockBorderWidth * 3 - 10) + (props.cellBorderWidth * 9);
@@ -126,75 +136,84 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
   const bottomBorderIndexes = [2, 5, 8];
 
   return (
-    <div
-      class={styles.sudoku}
-      style={{width: size, height: size}}
-    >
-      {sudokuStore.cells.map((row, y) => {
-        return row.map((value, x) => {
-          let isSelected = false
-          let highlightNumber = false
-          let highlightBackground = false
-          let highlightError = false
-          let highlightWrongCellError = false
+    <>
+      <div>
+        <p>Errores: {errorsCount} / {maxErrors}</p>
+      </div>
+      <div
+        class={styles.sudoku}
+        style={{width: size, height: size}}
+      >
+        {sudokuStore.cells.map((row, y) => {
+          return row.map((value, x) => {
+            let isSelected = false
+            let highlightNumber = false
+            let highlightBackground = false
+            let highlightError = false
+            let highlightWrongCellError = false
 
-          if (selectedCell.row >= 0) {
-            const selectedValue = sudokuStore.cells[selectedCell.row][selectedCell.column]
-            const currentValue = sudokuStore.cells[y][x]
-            if (selectedValue === currentValue) {
-              highlightNumber = true
+            if (selectedCell.row >= 0) {
+              const selectedValue = sudokuStore.cells[selectedCell.row][selectedCell.column]
+              const currentValue = sudokuStore.cells[y][x]
+              if (selectedValue === currentValue) {
+                highlightNumber = true
+              }
+
+              if (selectedCell.column === x && (selectedCell.row > y || selectedCell.row < y)) {
+                highlightBackground = true
+              }
+
+              if (selectedCell.row === y && (selectedCell.column > x || selectedCell.column < x)) {
+                highlightBackground = true
+              }
+
+              isSelected = selectedCell.row === y && selectedCell.column === x
             }
 
-            if (selectedCell.column === x && (selectedCell.row > y || selectedCell.row < y)) {
-              highlightBackground = true
-            }
-
-            if (selectedCell.row === y && (selectedCell.column > x || selectedCell.column < x)) {
-              highlightBackground = true
-            }
-
-            isSelected = selectedCell.row === y && selectedCell.column === x
-          }
-
-          if (duplicates.cells.length > 0) {
-            for (const cell of duplicates.cells) {
-              if (cell.row === y && cell.column === x) {
-                highlightError = true
+            if (duplicates.cells.length > 0) {
+              for (const cell of duplicates.cells) {
+                if (cell.row === y && cell.column === x) {
+                  highlightError = true
+                }
               }
             }
-          }
 
-          if (wrongCells.cells.length > 0) {
-            for (const cell of wrongCells.cells) {
-              if (cell.row === y && cell.column === x) {
-                highlightWrongCellError = true
+            if (wrongCells.cells.length > 0) {
+              for (const cell of wrongCells.cells) {
+                if (cell.row === y && cell.column === x) {
+                  highlightWrongCellError = true
+                }
               }
             }
-          }
 
-          return <Coordinate
-            key={`y-${y}-x-${x}`}
-            x={x}
-            y={y}
-            value={value}
-            size={props.cellSize}
-            borderTopWidth={topBorderIndexes.includes(y) ? props.blockBorderWidth : props.cellBorderWidth}
-            borderLeftWidth={leftBorderIndexes.includes(x) ? props.blockBorderWidth : props.cellBorderWidth}
-            borderRightWidth={rightBorderIndexes.includes(x) ? props.blockBorderWidth : props.cellBorderWidth}
-            borderBottomWidth={bottomBorderIndexes.includes(y) ? props.blockBorderWidth : props.cellBorderWidth}
-            onSelect$={(props) => {
-              duplicates.cells = []
-              selectedCell.row = props.y
-              selectedCell.column = props.x
-            }}
-            highlightBackground={highlightBackground}
-            highlightNumber={highlightNumber}
-            highlightAsError={highlightError}
-            highlightAsWrongCellError={highlightWrongCellError}
-            isSelected={isSelected}
-          />
-        })
-      })}
-    </div>
+            return <Coordinate
+              key={`y-${y}-x-${x}`}
+              x={x}
+              y={y}
+              value={value}
+              size={props.cellSize}
+              borderTopWidth={topBorderIndexes.includes(y) ? props.blockBorderWidth : props.cellBorderWidth}
+              borderLeftWidth={leftBorderIndexes.includes(x) ? props.blockBorderWidth : props.cellBorderWidth}
+              borderRightWidth={rightBorderIndexes.includes(x) ? props.blockBorderWidth : props.cellBorderWidth}
+              borderBottomWidth={bottomBorderIndexes.includes(y) ? props.blockBorderWidth : props.cellBorderWidth}
+              onSelect$={(props) => {
+                if (gameStatus.value !== GameStatus.PLAYING) {
+                  return
+                }
+
+                duplicates.cells = []
+                selectedCell.row = props.y
+                selectedCell.column = props.x
+              }}
+              highlightBackground={highlightBackground}
+              highlightNumber={highlightNumber}
+              highlightAsError={highlightError}
+              highlightAsWrongCellError={highlightWrongCellError}
+              isSelected={isSelected}
+            />
+          })
+        })}
+      </div>
+    </>
   );
 });
