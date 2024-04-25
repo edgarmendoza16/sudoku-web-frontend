@@ -20,7 +20,6 @@ interface CellProps {
   highlightNumber: boolean
   isSelected: boolean
   highlightAsError: boolean
-  highlightAsWrongCellError: boolean
   isInitial: boolean
   onSelect$: QRL<(info: CellInfo) => void>
 }
@@ -46,10 +45,6 @@ export const Cell = component$<CellProps>((props) => {
 
   if (props.highlightAsError) {
     classList.push(styles["highlight-error"])
-  }
-
-  if (props.highlightAsWrongCellError) {
-    classList.push(styles["highlight-wrong-cell-error"])
   }
 
   return (

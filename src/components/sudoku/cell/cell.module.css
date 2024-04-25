@@ -6,14 +6,14 @@
   border-style: solid;
   border-color: #b8b8b8;
   background-color: white;
-  color: #161616;
+  color: black;
   transition: background-color 0.2s ease;
   font-family: sans-serif;
   font-size: 2.5rem;
 }
 
 .cell.initial {
-  color: #356be1;
+  color: black;
 }
 
 .cell:hover {
@@ -29,14 +29,9 @@
 }
 
 .cell.highlight-number {
-  color: #0071ff;
+  color: #356be1
 }
 
 .cell.highlight-error {
-  color: red;
-}
-
-.cell.highlight-wrong-cell-error {
-  color: red;
-  background-color: orange;
+  color: #ff2121;
 }

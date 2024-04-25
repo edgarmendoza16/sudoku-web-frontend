@@ -97,6 +97,8 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
           duplicates.cells = []
         } else {
           duplicates.cells = Sudoku.getDuplicateNumberCoordinates(sudokuStore.cells, selectedCell.row, selectedCell.column, key)
+          sudokuStore.cells[selectedCell.row][selectedCell.column] = key
+          wrongCells.cells.push({row: selectedCell.row, column: selectedCell.column})
           errorsCount.value++
         }
       }
@@ -157,7 +159,7 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
             let highlightNumber = false
             let highlightBackground = false
             let highlightError = false
-            let highlightWrongCellError = false
+            const highlightWrongCellError = false
             let isInitialNumber = false
 
             if (selectedCell.row >= 0) {
@@ -189,10 +191,10 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
                 }
               }
 
-              if (wrongCells.cells.length > 0) {
+              if (!highlightError || wrongCells.cells.length > 0) {
                 for (const cell of wrongCells.cells) {
                   if (cell.row === y && cell.column === x) {
-                    highlightWrongCellError = true
+                    highlightError = true
                   }
                 }
               }
@@ -220,7 +222,6 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
               highlightBackground={highlightBackground}
               highlightNumber={highlightNumber}
               highlightAsError={highlightError}
-              highlightAsWrongCellError={highlightWrongCellError}
               isInitial={isInitialNumber}
               isSelected={isSelected}
             />
