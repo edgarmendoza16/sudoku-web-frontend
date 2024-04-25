@@ -1,7 +1,13 @@
 import {$, component$, useOnDocument, useSignal, useStore} from "@builder.io/qwik";
-import {Cell} from "./cell";
+import {Cell} from "./cell/cell";
 import styles from "./sudoku.module.css";
 import {Sudoku} from "~/libs/sudoku";
+import {GameStatus} from "./gameStatus";
+import {LevelSelector} from "./options/levelSelector/levelSelector";
+import {ErrorsLayout} from "./options/errors/errors";
+import type {SudokuStore} from "./sudokustore";
+import { generateSudokuStore} from "./sudokustore";
+import type {Coordinate} from "./coordinate";
 
 interface SudokuProps {
   cellSize: number
@@ -9,59 +15,10 @@ interface SudokuProps {
   cellBorderWidth: number
 }
 
-interface Coordinate {
-  row: number
-  column: number
-}
-
-interface SudokuStore {
-  correct: number[][]
-  initial: number[][]
-  cells: number[][]
-  missingCellsCount: number
-}
-
-function generateSudokuStore(level: string): SudokuStore {
-  const correctCells = Sudoku.generate()
-  const initialCells = Sudoku.removeNumbers(correctCells, level)
-  const cells = initialCells.map((row) => row.map((column) => column))
-
-  let missingCellsCount = 0
-  for (const row of initialCells) {
-    for (const col of row) {
-      if (col === 0) {
-        missingCellsCount++
-      }
-    }
-  }
-
-  return {
-    correct: correctCells,
-    initial: initialCells,
-    cells,
-    missingCellsCount,
-  }
-}
-
-enum GameStatus {
-  PLAYING = 0,
-  WON = 1,
-  LOST = 2,
-}
-
 export const SudokuLayout = component$<SudokuProps>((props) => {
+  const maxErrors = 3
   const checkErrors = useSignal<boolean>(true)
   const level = useSignal("facil")
-
-  const levels = [
-    'facil',
-    'medio',
-    'dificil',
-    'experto',
-    'maestro',
-    'extremo',
-  ]
-  const maxErrors = 3
   const gameStatus = useSignal<GameStatus>(GameStatus.PLAYING)
   const errorsCount = useSignal<number>(0)
   const sudokuStore = useStore<SudokuStore>(generateSudokuStore(level.value))
@@ -146,6 +103,21 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
     }
   }))
 
+  const reset = $((newGameLevel: string) => {
+    level.value = newGameLevel
+    errorsCount.value = 0
+    gameStatus.value = GameStatus.PLAYING
+    duplicates.cells = []
+    wrongCells.cells = []
+    selectedCell.row = -1
+    selectedCell.column = -1
+    const newSudoku = generateSudokuStore(level.value)
+    sudokuStore.cells = newSudoku.cells
+    sudokuStore.missingCellsCount = newSudoku.missingCellsCount
+    sudokuStore.correct = newSudoku.correct
+    sudokuStore.initial = newSudoku.initial
+  })
+
   if (errorsCount.value === maxErrors) {
     gameStatus.value = GameStatus.LOST
   } else if (sudokuStore.missingCellsCount === 0) {
@@ -171,26 +143,9 @@ export const SudokuLayout = component$<SudokuProps>((props) => {
 
   return (
     <>
-      <select value={level.value} onChange$={(event: any) => {
-        level.value = event.target.value
-        errorsCount.value = 0
-        gameStatus.value = GameStatus.PLAYING
-        duplicates.cells = []
-        wrongCells.cells = []
-        selectedCell.row = -1
-        selectedCell.column = -1
-        const newSudoku = generateSudokuStore(level.value)
-        sudokuStore.cells = newSudoku.cells
-        sudokuStore.missingCellsCount = newSudoku.missingCellsCount
-        sudokuStore.correct = newSudoku.correct
-        sudokuStore.initial = newSudoku.initial
-      }}>
-        {levels.map((option) => {
-          return <option value={option} key={option}>{option}</option>
-        })}
-      </select>
-      <div>
-        <p>Errores: {errorsCount} / {maxErrors}</p>
+      <div class={styles.options} style={{width: size}}>
+        <LevelSelector value={level.value} onSelect$={reset} />
+        <ErrorsLayout count={errorsCount.value} max={maxErrors} />
       </div>
       <div
         class={styles.sudoku}

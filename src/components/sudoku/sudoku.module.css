@@ -6,3 +6,16 @@
   flex-wrap: wrap;
   background-color: white;
 }
+
+.options {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  margin-top: 14px;
+}
+
+.options div {
+  margin-right: 14px;
+}
